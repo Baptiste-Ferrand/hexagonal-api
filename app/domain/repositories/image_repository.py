@@ -19,3 +19,7 @@ class ImageRepository(ABC):
     @abstractmethod
     def list_by_user(self, user_id: UUID) -> List[Image]:
         pass
+
+    @abstractmethod
+    def get_all(self) -> list[Image]:
+        pass

@@ -9,3 +9,7 @@ class BadRequestError(DomainError):
 
 class ConflictError(DomainError):
     """Resource conflict (e.g. already exists)"""
+
+class InvalidImageFormatError(BadRequestError):
+    """Raised when the uploaded image format is not supported"""
+    pass

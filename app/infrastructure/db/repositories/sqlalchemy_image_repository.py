@@ -37,3 +37,12 @@ class SQLAlchemyImageRepository(ImageRepository):
             Image(id=r.id, owner_id=r.owner_id, data_url=r.data_url, like_count=r.like_count)
             for r in rows
         ]
+
+    def get_all(self) -> list[Image]:
+        return self.session.query(ImageModel).all()
+    
+    def delete(self, image_id: UUID) -> None:
+        image = self.session.query(ImageModel).filter_by(id=image_id).first()
+        if image:
+            self.session.delete(image)
+            self.session.commit()
