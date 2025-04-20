@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
+from app.domain.exceptions import BadRequestError
 from app.infrastructure.db.session import get_db
 from app.infrastructure.db.repositories.sqlalchemy_user_repository import SQLAlchemyUserRepository
 from app.infrastructure.auth.auth_service import JWTAuthService
@@ -28,7 +29,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     try:
         token = use_case.execute(data.email, data.password, data.confirm_password)
         return {"access_token": token}
-    except ValueError as e:
+    except BadRequestError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/login")
@@ -40,5 +41,5 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     try:
         token = use_case.execute(data.email, data.password)
         return {"access_token": token}
-    except ValueError as e:
+    except BadRequestError as e:
         raise HTTPException(status_code=400, detail=str(e))

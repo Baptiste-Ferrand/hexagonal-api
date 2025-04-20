@@ -2,6 +2,8 @@ from uuid import UUID, uuid4
 from app.domain.repositories.image_repository import ImageRepository
 from app.domain.repositories.image_like_repository import ImageLikeRepository
 from app.domain.entities.image_like import ImageLike
+from app.domain.exceptions import NotFoundError
+
 
 class LikeImageUseCase:
     def __init__(self, image_repo: ImageRepository, like_repo: ImageLikeRepository):
@@ -11,7 +13,7 @@ class LikeImageUseCase:
     def execute(self, user_id: UUID, image_id: UUID) -> None:
         image = self.image_repo.get_by_id(image_id)
         if not image:
-            raise ValueError("Image not found")
+            raise NotFoundError("Image not found")
 
         existing_like = self.like_repo.get(image_id, user_id)
 

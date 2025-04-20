@@ -1,5 +1,6 @@
 from uuid import uuid4
 from app.domain.repositories.user_repository import UserRepository
+from app.domain.exceptions import BadRequestError
 from app.domain.services.auth_service import AuthService
 from app.domain.entities.user import User
 
@@ -10,10 +11,10 @@ class RegisterUserUseCase:
 
     def execute(self, email: str, password: str, confirm_password: str) -> str:
         if password != confirm_password:
-            raise ValueError("Passwords do not match")
+            raise BadRequestError("Passwords do not match")
         
         if self.user_repo.get_by_email(email):
-            raise ValueError("User already exists")
+            raise BadRequestError("User already exists")
 
         hashed = self.auth_service.hash_password(password)
         user = User(id=uuid4(), email=email, password=hashed)
