@@ -1,6 +1,7 @@
 from uuid import UUID
 from app.domain.repositories.image_repository import ImageRepository
 from app.domain.repositories.image_like_repository import ImageLikeRepository
+from app.domain.exceptions import NotFoundError, BadRequestError
 
 class UnlikeImageUseCase:
     def __init__(self, image_repo: ImageRepository, like_repo: ImageLikeRepository):
@@ -10,11 +11,11 @@ class UnlikeImageUseCase:
     def execute(self, user_id: UUID, image_id: UUID) -> None:
         image = self.image_repo.get_by_id(image_id)
         if not image:
-            raise ValueError("Image not found")
+            raise NotFoundError("Image not found")
 
         existing_like = self.like_repo.get(image_id, user_id)
         if not existing_like or not existing_like.liked:
-            raise ValueError("Image not liked yet")
+            raise BadRequestError("Image not liked yet")
 
         self.like_repo.delete(existing_like)
 

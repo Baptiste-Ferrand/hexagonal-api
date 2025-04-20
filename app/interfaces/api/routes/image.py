@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from app.domain.exceptions import NotFoundError, BadRequestError
 from sqlalchemy.orm import Session
 from uuid import UUID
 
@@ -24,7 +25,7 @@ def like_image(
     try:
         use_case.execute(user_id=user_id, image_id=image_id)
         return {"message": "Image liked"}
-    except ValueError as e:
+    except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 
@@ -41,5 +42,7 @@ def unlike_image(
     try:
         use_case.execute(user_id=user_id, image_id=image_id)
         return {"message": "Image unliked"}
-    except ValueError as e:
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except BadRequestError as e:
         raise HTTPException(status_code=400, detail=str(e))
