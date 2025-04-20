@@ -40,3 +40,9 @@ class SQLAlchemyImageRepository(ImageRepository):
 
     def get_all(self) -> list[Image]:
         return self.session.query(ImageModel).all()
+    
+    def delete(self, image_id: UUID) -> None:
+        image = self.session.query(ImageModel).filter_by(id=image_id).first()
+        if image:
+            self.session.delete(image)
+            self.session.commit()
