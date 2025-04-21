@@ -1,9 +1,25 @@
 services:
-  bdd:
-    image: postgres:latest
+  db:
+    image: postgres:15
+    container_name: hexapi-db-${ENV}
+    restart: always
+    environment:
+      POSTGRES_DB: ${BDD_NAME}
+      POSTGRES_USER: ${BDD_USER}
+      POSTGRES_PASSWORD: ${BDD_PASSWORD}
+    volumes:
+      - db_data_${ENV}:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: bdd
+
+  back:
+    image: ghcr.io/baptiste-ferrand/hexagonal-api:${IMAGE_TAG}
+    container_name: hexapi-app-${ENV}
+    restart: always
+    ports:
+      - "${NGINX_PORT}:8000"
+    env_file:
+      - .env
+
+volumes:
+  db_data_${ENV}:

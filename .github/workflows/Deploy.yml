@@ -5,7 +5,6 @@ on:
     branches:
       - develop
       - main
-      - feat/CICD
 
 jobs:
   setup-docker-tag:
@@ -59,3 +58,42 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64/v8
           tags: ghcr.io/baptiste-ferrand/hexagonal-api:${{ needs.setup-docker-tag.outputs.docker_tag || 'latest' }}
+
+  # deploy:
+  #   needs: build-and-deploy-image
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+  #   steps:
+  #     - name: Checkout du dépôt
+  #       uses: actions/checkout@v4
+
+  #     - name: Déduire l'environnement
+  #       id: env
+  #       run: |
+  #         if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+  #           echo "env=prod" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "env=pre-prod" >> $GITHUB_OUTPUT
+  #         fi
+
+  #     - name: Créer fichier .env
+  #       run: |
+  #         echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" > .env
+  #         echo "BDD_NAME=${{ secrets.BDD_NAME }}" >> .env
+  #         echo "BDD_USER=${{ secrets.BDD_USER }}" >> .env
+  #         echo "BDD_PASSWORD=${{ secrets.BDD_PASSWORD }}" >> .env
+
+  #     - name: Préparer clé SSH
+  #       run: |
+  #         echo "${{ secrets.RASPBERRY_SSH_KEY }}" > private_key.pem
+  #         chmod 600 private_key.pem
+
+  #     - name: Envoyer les fichiers sur le Raspberry
+  #       run: |
+  #         scp -i private_key.pem .env deploy.sh docker-compose.${{ steps.env.outputs.env }}.yml \
+  #           ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:/home/${{ secrets.RASPBERRY_USER }}/app-${{ steps.env.outputs.env }}/
+
+  #     - name: Lancer le déploiement distant
+  #       run: |
+  #         ssh -i private_key.pem ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} \
+  #           "cd /home/${{ secrets.RASPBERRY_USER }}/app-${{ steps.env.outputs.env }} && chmod +x deploy.sh && ./deploy.sh ${{ steps.env.outputs.env }}"
