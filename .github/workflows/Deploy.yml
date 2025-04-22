@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - main
+      - feat/CICD
 
 jobs:
   setup-docker-tag:
@@ -20,7 +21,7 @@ jobs:
           elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
             echo "tag=pre-prod" >> $GITHUB_OUTPUT
           else
-            echo "tag=dev" >> $GITHUB_OUTPUT
+            echo "tag=pre-prod" >> $GITHUB_OUTPUT
           fi
 
   build-and-deploy-image:
@@ -59,41 +60,72 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           tags: ghcr.io/baptiste-ferrand/hexagonal-api:${{ needs.setup-docker-tag.outputs.docker_tag || 'latest' }}
 
-  # deploy:
-  #   needs: build-and-deploy-image
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-  #   steps:
-  #     - name: Checkout du dépôt
-  #       uses: actions/checkout@v4
+  deploy:
+    needs: build-and-deploy-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du dépôt
+        uses: actions/checkout@v4
 
-  #     - name: Déduire l'environnement
-  #       id: env
-  #       run: |
-  #         if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-  #           echo "env=prod" >> $GITHUB_OUTPUT
-  #         else
-  #           echo "env=pre-prod" >> $GITHUB_OUTPUT
-  #         fi
+      - name: Déduire l'environnement
+        id: env
+        run: |
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            echo "env=prod" >> $GITHUB_OUTPUT
+          else
+            echo "env=pre-prod" >> $GITHUB_OUTPUT
+          fi
 
-  #     - name: Créer fichier .env
-  #       run: |
-  #         echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" > .env
-  #         echo "BDD_NAME=${{ secrets.BDD_NAME }}" >> .env
-  #         echo "BDD_USER=${{ secrets.BDD_USER }}" >> .env
-  #         echo "BDD_PASSWORD=${{ secrets.BDD_PASSWORD }}" >> .env
+      - name: Créer fichier .env
+        run: |
+            cat <<EOF > .env
+            # ========================
+            # 📦 ENVIRONNEMENT
+            # ========================
+            ENV=${{ steps.env.outputs.env }}
+            # ========================
+            # 🔐 AUTH & DATABASE
+            # ========================
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            BDD_NAME=${{ secrets.BDD_NAME }}
+            BDD_USER=${{ secrets.BDD_USER }}
+            BDD_PASSWORD=${{ secrets.BDD_PASSWORD }}
+            DATABASE_URL=${{ vars.DATABASE_URL}}
+            
+            # ========================
+            # ☁️ MINIO
+            # ========================
+            MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}
+            MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}
+            MINIO_ENDPOINT=${{ vars.MINIO_ENDPOINT }}
+            MINIO_PUBLIC_URL=${{ vars.MINIO_PUBLIC_URL }}
+            MINIO_BUCKET=${{ vars.MINIO_BUCKET }}
+            EOF
 
-  #     - name: Préparer clé SSH
-  #       run: |
-  #         echo "${{ secrets.RASPBERRY_SSH_KEY }}" > private_key.pem
-  #         chmod 600 private_key.pem
+      - name: Préparer clé SSH
+        run: |
+          echo "${{ secrets.RASPBERRY_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+  
+      - name: 🛠️ Préparer structure serveur distante
+        run: |
+          ssh -i private_key.pem ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "\
+            sudo mkdir -p /app && \
+            sudo mkdir -p /app/${{ steps.env.outputs.env }}/nginx"
 
-  #     - name: Envoyer les fichiers sur le Raspberry
-  #       run: |
-  #         scp -i private_key.pem .env deploy.sh docker-compose.${{ steps.env.outputs.env }}.yml \
-  #           ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:/home/${{ secrets.RASPBERRY_USER }}/app-${{ steps.env.outputs.env }}/
+      - name: 🚚 Copier les fichiers sur le Raspberry
+        run: |
+          # Copier les fichiers spécifiques à l'environnement
+          scp -i private_key.pem .env \
+            docker-compose.${{ steps.env.outputs.env }}.yml \
+            nginx/api.conf \
+            ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:/app/${{ steps.env.outputs.env }}/
 
-  #     - name: Lancer le déploiement distant
-  #       run: |
-  #         ssh -i private_key.pem ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} \
-  #           "cd /home/${{ secrets.RASPBERRY_USER }}/app-${{ steps.env.outputs.env }} && chmod +x deploy.sh && ./deploy.sh ${{ steps.env.outputs.env }}"
+          # Copier le script de déploiement à la racine /app/
+          scp -i private_key.pem deploy.sh \
+            ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:/app/
+
+      - name: 🚀 Lancer le déploiement via SSH
+        run: |
+          ssh -i private_key.pem ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} \
+            "cd /app && chmod +x deploy.sh && ./deploy.sh ${{ steps.env.outputs.env }}"
