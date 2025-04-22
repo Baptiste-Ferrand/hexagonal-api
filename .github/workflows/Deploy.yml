@@ -106,7 +106,6 @@ jobs:
         run: |
           echo "${{ secrets.RASPBERRY_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
-          cat private_key.pem
   
       - name: 🛠️ Préparer structure serveur distante
         run: |
