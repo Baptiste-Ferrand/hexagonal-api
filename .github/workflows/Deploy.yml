@@ -109,10 +109,11 @@ jobs:
   
       - name: 🛠️ Préparer structure serveur distante
         run: |
-          ssh -i private_key.pem ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "\
-            sudo mkdir -p /app && \
-            sudo mkdir -p /app/${{ steps.env.outputs.env }}/nginx"
-
+          ssh -i private_key.pem -o StrictHostKeyChecking=no \
+            ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "\
+              sudo mkdir -p /app && \
+              sudo mkdir -p /app/${{ steps.env.outputs.env }}/nginx"
+              
       - name: 🚚 Copier les fichiers sur le Raspberry
         run: |
           # Copier les fichiers spécifiques à l'environnement
