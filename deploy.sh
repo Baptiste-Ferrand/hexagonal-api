@@ -9,7 +9,7 @@ if [[ "$ENV" != "prod" && "$ENV" != "pre-prod" ]]; then
   exit 1
 fi
 
-APP_PATH="/app/$ENV"
+APP_PATH="/$ENV"
 cd "$APP_PATH"
 
 DOMAIN="like-it-api.coak.fr"
@@ -76,7 +76,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 echo "🐳 === [4/5] Déploiement Docker Compose ==="
-docker compose -f "$APP_PATH/docker-compose.$ENV.yml" down
-docker compose -f "$APP_PATH/docker-compose.$ENV.yml" up -d --build
+docker compose -f "$APP_PATH/docker-compose.yml" down
+docker compose -f "$APP_PATH/docker-compose.yml" up -d --build
 
 echo "🎉 === [5/5] Déploiement $ENV terminé avec succès ✅"
