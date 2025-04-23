@@ -102,7 +102,7 @@ jobs:
             MINIO_BUCKET=${{ vars.MINIO_BUCKET }}
             EOF
 
-      - name: Préparer clé SSH 
+      - name: Préparer clé SSH
         run: |
           echo "${{ secrets.RASPBERRY_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
@@ -115,10 +115,15 @@ jobs:
 
       - name: 🚚 Copier les fichiers sur le Raspberry
         run: |
+          run: |
+          # Copier les fichiers dans le dossier de l'environnement
           scp -i private_key.pem -o StrictHostKeyChecking=no .env \
             docker-compose.yml \
-            nginx/api.conf \nginx
             ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:~/work/${{ steps.env.outputs.env }}/
+
+          # Copier le fichier api.conf dans le dossier nginx dédié
+          scp -i private_key.pem -o StrictHostKeyChecking=no nginx/api.conf \
+            ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:~/work/${{ steps.env.outputs.env }}/nginx/
       
           scp -i private_key.pem -o StrictHostKeyChecking=no deploy.sh \
             ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:~/work/
