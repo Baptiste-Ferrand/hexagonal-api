@@ -24,7 +24,7 @@ fi
 
 EMAIL="baptiste.ferrand.pro@outlook.fr"
 CERT_PATH="/etc/letsencrypt/live/$DOMAIN/fullchain.pem"
-SOURCE_CONF="$APP_PATH/nginx/api.conf"
+SOURCE_CONF="./nginx/api.conf"
 TARGET_CONF="/etc/nginx/sites-available/api-$ENV.conf"
 ENABLED_LINK="/etc/nginx/sites-enabled/api-$ENV.conf"
 
@@ -76,7 +76,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 echo "🐳 === [4/5] Déploiement Docker Compose ==="
-docker compose -f "$APP_PATH/docker-compose.yml" down
-docker compose -f "$APP_PATH/docker-compose.yml" up -d --build
+docker compose down
+docker compose up --build -d
 
 echo "🎉 === [5/5] Déploiement $ENV terminé avec succès ✅"
