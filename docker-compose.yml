@@ -22,4 +22,4 @@ services:
       - .env
 
 volumes:
-  db_data_${ENV}:
+  db_data_preprod:
