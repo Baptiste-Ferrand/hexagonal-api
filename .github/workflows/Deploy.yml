@@ -102,7 +102,7 @@ jobs:
             MINIO_BUCKET=${{ vars.MINIO_BUCKET }}
             EOF
 
-      - name: Préparer clé SSH
+      - name: Préparer clé SSH 
         run: |
           echo "${{ secrets.RASPBERRY_SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
