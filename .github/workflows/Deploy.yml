@@ -111,22 +111,20 @@ jobs:
         run: |
           ssh -i private_key.pem -o StrictHostKeyChecking=no \
             ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} "\
-              sudo mkdir -p /app && \
-              sudo mkdir -p /app/${{ steps.env.outputs.env }}/nginx"
+              mkdir -p ~/work/${{ steps.env.outputs.env }}/nginx"
 
       - name: 🚚 Copier les fichiers sur le Raspberry
         run: |
-          # Copier les fichiers spécifiques à l'environnement
           scp -i private_key.pem -o StrictHostKeyChecking=no .env \
             docker-compose.yml \
             nginx/api.conf \
-            ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:/app/${{ steps.env.outputs.env }}/
-
-          # Copier le script de déploiement à la racine /app/
+            ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:~/work/${{ steps.env.outputs.env }}/
+      
           scp -i private_key.pem -o StrictHostKeyChecking=no deploy.sh \
-            ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:/app/
+            ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:~/work/
 
       - name: 🚀 Lancer le déploiement via SSH
         run: |
-          ssh -i private_key.pem -o StrictHostKeyChecking=no \ ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} \
-            "cd /app && chmod +x deploy.sh && ./deploy.sh ${{ steps.env.outputs.env }}"
+          ssh -i private_key.pem -o StrictHostKeyChecking=no \
+            ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }} \
+            "cd ~/work && chmod +x deploy.sh && ./deploy.sh ${{ steps.env.outputs.env }}"
