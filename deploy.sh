@@ -9,7 +9,7 @@ if [[ "$ENV" != "prod" && "$ENV" != "pre-prod" ]]; then
   exit 1
 fi
 
-APP_PATH="/$ENV"
+APP_PATH="$ENV"
 cd "$APP_PATH"
 
 DOMAIN="like-it-api.coak.fr"
