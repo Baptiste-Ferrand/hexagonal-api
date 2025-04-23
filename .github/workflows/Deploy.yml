@@ -117,7 +117,7 @@ jobs:
         run: |
           scp -i private_key.pem -o StrictHostKeyChecking=no .env \
             docker-compose.yml \
-            nginx/api.conf \
+            nginx/api.conf \nginx
             ${{ secrets.RASPBERRY_USER }}@${{ secrets.RASPBERRY_HOST }}:~/work/${{ steps.env.outputs.env }}/
       
           scp -i private_key.pem -o StrictHostKeyChecking=no deploy.sh \
