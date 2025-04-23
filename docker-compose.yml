@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${BDD_USER}
       POSTGRES_PASSWORD: ${BDD_PASSWORD}
     volumes:
-      - db_data_${ENV}:/var/lib/postgresql/data
+      - db_data_preprod:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
