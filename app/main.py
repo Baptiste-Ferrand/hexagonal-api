@@ -9,6 +9,7 @@ from app.interfaces.api.routes import image, auth
 from app.infrastructure.db.models.base import Base
 from app.infrastructure.db.session import engine
 
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
@@ -39,12 +40,18 @@ def custom_openapi():
     return openapi_schema
 
 app.openapi = custom_openapi
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+
+origins = [
+    "http://localhost:5173",
+    "https://like-it-pre-prod.coak.fr",
+    "https://like-it.coak.fr"
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(auth.router)
 app.include_router(image.router)
